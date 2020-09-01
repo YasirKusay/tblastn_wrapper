@@ -54,5 +54,5 @@ def run_command(args, command, dir_name):
     if (args.out is None):
         subprocess.run(command, cwd=dir_name, check=True, shell=True)
     else: 
-        with open(args.out, "w") as f:
+        with open(args.out, "a") as f:
             subprocess.run(command, stdout=f, cwd=dir_name, check=True, shell=True)
