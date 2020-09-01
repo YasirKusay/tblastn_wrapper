@@ -8,8 +8,8 @@ def parse_args():
     )
 
     parser.add_argument(
-        "sequences", 
-        metavar="SEQ", 
+        "-query", 
+        metavar="QUERY", 
         type=str, 
         help="the sequence that you want to search"
     )
