@@ -1,32 +1,56 @@
 import re
-import sys
 import multiprocessing
 import tempfile
 import argparse
 import os
 import subprocess
 
-def tblastn_wrapper(args: argparse.Namespace, unknown):
-    inp = args.query # needs to be modified
 
-    dir_name = tempfile.mkdtemp()
+def tblastn_wrapper(args: argparse.Namespace, extra_args):
+    query_filename = args.query
 
-    extension = inp[inp.find('.'):]  # e.g. .fa or .fq
-    with open(inp, "r") as f: # reading line by line, failsafe for very large programs
+    with tempfile.TemporaryDirectory() as dir_name:
+        subqueries = split_query(query_filename, dir_name)
+
+        run_queries(subqueries, args.out, dir_name, args.threads, extra_args)
+
+
+def split_query(query_filename, working_dir):
+    subqueries = []
+
+    # Get the file extension (e.g. .fa or .fq)
+    _, extension = os.path.splitext(query_filename)
+
+    with open(query_filename, "r") as f:
+        # reading line by line, failsafe for very large queries
         for line in f:
-            while (re.search('>', line) != None):
-                name = line
-                name = name.rstrip()
+            # Search until reaching a FASTA header
+            while re.search(">", line) is not None:
+                # Extract the query header name
+                name = line.rstrip()
 
-                letters = re.search(r'[^ >]', line, re.I)
+                letters = re.search(r"[^ >]", line, re.I)
                 start = letters.start()
 
-                organism_name = name[name.find('>')+start:] #+ extension 
+                organism_name = name[name.find(">") + start :]  # + extension
                 organism_name = organism_name.replace(" ", "_")
-                to_write = tempfile.NamedTemporaryFile(prefix=organism_name, suffix=extension, dir=dir_name, mode="w", delete=False)
+
+                # Split the query into a new temporary file
+                to_write = tempfile.NamedTemporaryFile(
+                    prefix=organism_name,
+                    suffix=extension,
+                    dir=working_dir,
+                    mode="w",
+                    delete=False,
+                )
+
+                subqueries.append(to_write.name)
+
                 to_write.write(line)
+
+                # Copy query lines until reaching the next header or blank line
                 line = next(f)
-                while (re.search('>', line) == None and line != None):
+                while re.search(">", line) is None and line is not None:
                     to_write.write(line)
                     try:
                         line = next(f)
@@ -34,25 +58,23 @@ def tblastn_wrapper(args: argparse.Namespace, unknown):
                         break
                 to_write.close()
 
-    processes = []
+    return subqueries
 
-    for file in os.listdir(dir_name):
-        file = dir_name + "/" + file 
-        cmd = " ".join(unknown)
-        command_to_run = "tblastn -query " + file + " " + cmd
-        p = multiprocessing.Process(target = run_command, args=[args, command_to_run, dir_name])
-        p.start()
-        processes.append(p)
 
-    for process in processes:
-        process.join()
+def run_queries(query_filenames, output_filename, working_dir, threads, extra_args):
+    query_commands = [
+        ["tblastn", "-query", filename, extra_args] for filename in query_filenames
+    ]
 
-    for file in os.listdir(dir_name):
-        os.remove(dir_name + "/" + file)
+    with multiprocessing.Pool(processes=threads) as pool:
+        query_results = pool.map(run_worker, query_commands)
 
-def run_command(args, command, dir_name):
-    if (args.out is None):
-        subprocess.run(command, cwd=dir_name, check=True, shell=True)
-    else: 
-        with open(args.out, "a") as f:
-            subprocess.run(command, stdout=f, cwd=dir_name, check=True, shell=True)
+        with open(output_filename, "wb") as f:
+            for res in query_results:
+                f.write(res)
+
+
+def run_worker(command):
+    res = subprocess.run(command, check=True, shell=True, capture_output=True)
+
+    return res.stdout
