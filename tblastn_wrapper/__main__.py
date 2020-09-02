@@ -9,17 +9,17 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-query", 
-        metavar="QUERY", 
-        type=str, 
-        help="the sequence that you want to search"
+        "-query",
+        metavar="QUERY",
+        type=str,
+        required=True,
+        help="the sequence that you want to search",
     )
 
+    parser.add_argument("-out", metavar="OUT", type=str, help="the output location")
+
     parser.add_argument(
-        "-out", 
-        metavar="OUT", 
-        type=str, 
-        help="the output location"
+        "-t,--threads", metavar="THREADS", type=int, help="The number of threads to use"
     )
 
     return parser.parse_known_args()
