@@ -1,30 +1,35 @@
 PIP = pip3
 PYTHON = python3
 SPHINX = sphinx-build
+POETRY = poetry
+BLACK = black
 
-.PHONY: setup
-setup:
-	$(PIP) install -r requirements.txt
+install: pyproject.toml
+	$(POETRY) install
 
-.PHONY: setup-dev
-setup-dev:
-	$(PIP) install -r requirements-dev.txt
-
-install: $(wildcard tblastn_wrapper/*.py)
-	$(PIP) install -e .
+build: $(wildcard tblastn_wrapper/**/*.py) pyproject.toml
+	$(POETRY) build
 
 .PHONY: run
 run: install
-	tblastn_wrapper
+	$(POETRY) run tblastn_wrapper
 
 .PHONY: test
 test:
 	$(PYTHON) -m unittest tests/*.py
 
+.PHONY: clean
+clean:
+	rm -rf dist
+
 .PHONY: docs
 docs:
 	sphinx-build -b html docs/ docs/_build
 
+.PHONY: typecheck
+typecheck:
+	$(POETRY) run mypy -p tblastn_wrapper --ignore-missing-imports
+
 .PHONY: format
 format:
-	black tblastn_wrapper
+	$(BLACK) tblastn_wrapper

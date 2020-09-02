@@ -1,6 +1,7 @@
-import argparse 
+import argparse
 
-from tblastn_wrapper import tblastn_wrapper
+from tblastn_wrapper.tblastn_wrapper import tblastn_wrapper
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -23,9 +24,11 @@ def parse_args():
 
     return parser.parse_known_args()
 
+
 def main():
     args, unknown = parse_args()
     tblastn_wrapper(args, unknown)
+
 
 if __name__ == "__main__":
     main()
