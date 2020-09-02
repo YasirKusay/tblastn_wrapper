@@ -12,7 +12,7 @@ def tblastn_wrapper(args: argparse.Namespace, extra_args):
     with tempfile.TemporaryDirectory() as dir_name:
         subqueries = split_query(query_filename, dir_name)
 
-        run_queries(subqueries, args.out, dir_name, extra_args)
+        run_queries(subqueries, args.out, dir_name, args.threads, extra_args)
 
 
 def split_query(query_filename, working_dir):
@@ -61,25 +61,20 @@ def split_query(query_filename, working_dir):
     return subqueries
 
 
-def run_queries(query_filenames, output_filename, working_dir, extra_args):
-    processes = []
+def run_queries(query_filenames, output_filename, working_dir, threads, extra_args):
+    query_commands = [
+        ["tblastn", "-query", filename, extra_args] for filename in query_filenames
+    ]
 
-    for file in query_filenames:
-        cmd = " ".join(extra_args)
-        command_to_run = "tblastn -query " + file + " " + cmd
-        p = multiprocessing.Process(
-            target=run_command, args=(command_to_run, output_filename, working_dir)
-        )
-        p.start()
-        processes.append(p)
+    with multiprocessing.Pool(processes=threads) as pool:
+        query_results = pool.map(run_worker, query_commands)
 
-    for process in processes:
-        process.join()
+        with open(output_filename, "wb") as f:
+            for res in query_results:
+                f.write(res)
 
 
-def run_command(command, output_filename, working_dir):
-    if output_filename is None:
-        subprocess.run(command, cwd=working_dir, check=True, shell=True)
-    else:
-        with open(output_filename, "a") as f:
-            subprocess.run(command, stdout=f, cwd=working_dir, check=True, shell=True)
+def run_worker(command):
+    res = subprocess.run(command, check=True, shell=True, capture_output=True)
+
+    return res.stdout

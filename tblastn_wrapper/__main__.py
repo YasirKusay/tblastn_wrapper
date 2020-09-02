@@ -1,4 +1,5 @@
 import argparse
+from os import cpu_count
 
 from tblastn_wrapper.tblastn_wrapper import tblastn_wrapper
 
@@ -16,10 +17,16 @@ def parse_args():
         help="the sequence that you want to search",
     )
 
-    parser.add_argument("-out", metavar="OUT", type=str, help="the output location")
+    parser.add_argument(
+        "-out", metavar="OUT", type=str, default="output.fa", help="the output location"
+    )
 
     parser.add_argument(
-        "-t,--threads", metavar="THREADS", type=int, help="The number of threads to use"
+        "-threads",
+        metavar="THREADS",
+        type=int,
+        help="The number of threads to use",
+        default=cpu_count(),
     )
 
     return parser.parse_known_args()
@@ -27,6 +34,7 @@ def parse_args():
 
 def main():
     args, unknown = parse_args()
+
     tblastn_wrapper(args, unknown)
 
 
