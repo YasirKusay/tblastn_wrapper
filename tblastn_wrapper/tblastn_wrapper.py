@@ -5,7 +5,7 @@ import argparse
 import os
 import subprocess
 
-def tblastn_wrapper(args: argparse.Namespace, extra_args):
+def wrapper(args: argparse.Namespace, extra_args):
     query_filename = args.query
 
     with tempfile.TemporaryDirectory() as dir_name:

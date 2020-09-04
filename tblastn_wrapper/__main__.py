@@ -35,7 +35,7 @@ def parse_args():
 
 def main():
     args, unknown = parse_args()
-    tblastn_wrapper(args, unknown)
+    wrapper(args, unknown)
 
 
 if __name__ == "__main__":
