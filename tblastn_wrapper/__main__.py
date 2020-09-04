@@ -1,6 +1,6 @@
 import argparse 
 from os import cpu_count
-from tblastn_wrapper import tblastn_wrapper
+from tblastn_wrapper import wrapper
 
 def parse_args():
     parser = argparse.ArgumentParser(
