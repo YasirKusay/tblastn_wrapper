@@ -32,6 +32,9 @@ def split_query(query_filename, working_dir):
                 organism_name = name[name.find(">") + start :]
                 organism_name = organism_name.replace(" ", "_")
 
+                if (len(organism_name) > 20): 
+                    organism_name = organism_name[0:20]
+
                 to_write = tempfile.NamedTemporaryFile(
                     prefix=organism_name, 
                     suffix=extension, 

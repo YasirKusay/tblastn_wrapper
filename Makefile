@@ -7,7 +7,7 @@ BLACK = black
 install: pyproject.toml
 	$(POETRY) install
 
-build: $(wildcard tblastn_wrapper/**/*.py) pyproject.toml
+build: $(wildcard tblastn_wrapper/*.py) pyproject.toml
 	$(POETRY) build
 
 .PHONY: run
