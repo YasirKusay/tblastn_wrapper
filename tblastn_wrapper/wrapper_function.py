@@ -65,9 +65,16 @@ def run_queries(query_filenames, output_filename, working_dir, threads, extra_ar
     query_commands = []
 
     cmd = " ".join(extra_args)
-    
+
+    # below is in case the user decides to alias the tblastn_wrapper into tblastn
+    # in the case of that, we must know the path of the tblastn command
+    # done in shell, as locate is very fast
+
+    path_command = subprocess.run('locate tblastn | egrep "/tblastn$"', check=True, shell=True, capture_output=True)
+    tblastn_path = path_command.stdout.decode("utf-8").partition('\n')[0]
+
     for filename in query_filenames:
-        command = "tblastn -query " + filename + " " + cmd
+        command = tblastn_path + " -query " + filename + " " + cmd
         query_commands.append(command)
 
     with multiprocessing.Pool(processes=threads) as pool:
