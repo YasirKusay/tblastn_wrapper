@@ -82,29 +82,48 @@ def run_queries(query_filenames, output_filename, working_dir, threads, extra_ar
 
         num_queries = 0
 
-        #closing = "" # stores the info, such as matrix used, gap penalties, etc
+        closing = "" # stores the info, such as matrix used, gap penalties, etc
 
         if output_filename is not None:
             with open(output_filename, "wb") as f:
                 for res in query_results:
                     if (num_queries == 0):
                         num_queries += 1
-                        #to_print, closing = initial_line_process(res)
-                        f.write(res)
+                        to_print, closing = initial_line_process(res)
+                        f.write(to_print)
                     else:
                         f.write(process_lines(res))
+                
+                f.write(closing)
         else:
             for res in query_results:
                 if (num_queries == 0):
                     num_queries += 1
-                    print(res.decode("utf-8"))
+                    to_print, closing = initial_line_process(res)
+                    print(to_print.decode("utf-8"))
                 else:
                     print(process_lines(res).decode("utf-8"))
+            
+            print(closing.decode("utf-8"))
 
     for filename in query_filenames:
         os.remove(filename)
 
 def initial_line_process(lines):
+    str_array = lines.decode("utf-8").splitlines()
+    str_array.reverse()
+    end = 0
+
+    for line in str_array:
+        if re.search('^[ ]*Database:', line) is not None:
+            break
+        end += 1
+
+    str_array.reverse()
+    to_return = str_array[:len(str_array)-end-1]
+    closing = str_array[len(str_array)-end-1:]
+
+    return "\n".join(to_return).encode('utf-8'), "\n".join(closing).encode('utf-8')
 
 
 # getting rid of the introductory/conclusion lines that are part of the 
@@ -122,13 +141,12 @@ def process_lines(lines):
     end = 0 
     str_array.reverse()
     for line in str_array:
-        if re.search('^Matrix:', line) is not None:
+        if re.search('^[ ]*Database:', line) is not None:
             break
         end += 1
     
     str_array.reverse()
     to_return = str_array[start:len(str_array)-end-1]
-    print(start)
     return "\n".join(to_return).encode('utf-8')
 
 
