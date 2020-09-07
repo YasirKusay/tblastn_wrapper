@@ -80,16 +80,57 @@ def run_queries(query_filenames, output_filename, working_dir, threads, extra_ar
     with multiprocessing.Pool(processes=threads) as pool:
         query_results = pool.map(run_worker, query_commands)
 
+        num_queries = 0
+
+        #closing = "" # stores the info, such as matrix used, gap penalties, etc
+
         if output_filename is not None:
             with open(output_filename, "wb") as f:
                 for res in query_results:
-                    f.write(res)
+                    if (num_queries == 0):
+                        num_queries += 1
+                        #to_print, closing = initial_line_process(res)
+                        f.write(res)
+                    else:
+                        f.write(process_lines(res))
         else:
             for res in query_results:
-                print(res)
+                if (num_queries == 0):
+                    num_queries += 1
+                    print(res.decode("utf-8"))
+                else:
+                    print(process_lines(res).decode("utf-8"))
 
     for filename in query_filenames:
         os.remove(filename)
+
+def initial_line_process(lines):
+
+
+# getting rid of the introductory/conclusion lines that are part of the 
+# output of tblastn
+
+def process_lines(lines):
+    str_array = lines.decode("utf-8").splitlines()
+    start = 0
+    for line in str_array:
+        if re.search('^Query=', line) is not None:
+            break
+        start += 1
+
+    # reversing the list is more efficient than iterating through the list
+    end = 0 
+    str_array.reverse()
+    for line in str_array:
+        if re.search('^Matrix:', line) is not None:
+            break
+        end += 1
+    
+    str_array.reverse()
+    to_return = str_array[start:len(str_array)-end-1]
+    print(start)
+    return "\n".join(to_return).encode('utf-8')
+
 
 def run_worker(command):
     res = subprocess.run(command, check=True, shell=True, capture_output=True)
