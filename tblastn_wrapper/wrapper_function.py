@@ -70,7 +70,9 @@ def run_queries(query_filenames, output_filename, working_dir, threads, extra_ar
     # in the case of that, we must know the path of the tblastn command
     # done in shell, as locate is very fast
 
-    path_command = subprocess.run('locate tblastn | egrep "/tblastn$"', check=True, shell=True, capture_output=True)
+    # command below allows tblastn_wrapper to be
+    #  compatible with any version of tblastn
+    path_command = subprocess.run('which tblastn', check=True, shell=True, capture_output=True)
     tblastn_path = path_command.stdout.decode("utf-8").partition('\n')[0]
 
     for filename in query_filenames:
