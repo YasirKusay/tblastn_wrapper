@@ -29,9 +29,6 @@ def split_query(query_filename, working_dir):
                 letters = re.search(r"[^ >]", line, re.I)
                 start = letters.start()
 
-                if (len(organism_name) > 20): 
-                    organism_name = organism_name[0:20]
-
                 to_write = tempfile.NamedTemporaryFile(
                     suffix=extension, 
                     dir=working_dir, 
