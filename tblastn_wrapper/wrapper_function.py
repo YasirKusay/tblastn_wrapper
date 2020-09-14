@@ -4,6 +4,7 @@ import tempfile
 import argparse
 import os
 import subprocess
+import sys
 
 def wrapper(args: argparse.Namespace, extra_args):
     query_filename = args.query
@@ -72,33 +73,42 @@ def run_queries(query_filenames, output_filename, working_dir, threads, extra_ar
         query_commands.append(command)
 
     with multiprocessing.Pool(processes=threads) as pool:
+        m = multiprocessing.Manager()
+        to_stop = m.Event()
         query_results = pool.map(run_worker, query_commands)
+
+        for res, error, returncode in query_results:
+            if error is not None:
+                sys.stderr.write(error.decode("utf-8"))
+                pool.terminate()
+                exit(returncode)
 
         num_queries = 0
 
         closing = "" # stores the info, such as matrix used, gap penalties, etc
 
-        if output_filename is not None:
-            with open(output_filename, "wb") as f:
+        if is_error is False:
+            if output_filename is not None:
+                with open(output_filename, "wb") as f:
+                    for res in query_results:
+                        if (num_queries == 0):
+                            num_queries += 1
+                            to_print, closing = initial_line_process(res)
+                            f.write(to_print)
+                        else:
+                            f.write(process_lines(res))
+                    
+                    f.write(closing)
+            else:
                 for res in query_results:
                     if (num_queries == 0):
                         num_queries += 1
                         to_print, closing = initial_line_process(res)
-                        f.write(to_print)
+                        print(to_print.decode("utf-8"))
                     else:
-                        f.write(process_lines(res))
-                
-                f.write(closing)
-        else:
-            for res in query_results:
-                if (num_queries == 0):
-                    num_queries += 1
-                    to_print, closing = initial_line_process(res)
-                    print(to_print.decode("utf-8"))
-                else:
-                    print(process_lines(res).decode("utf-8"))
-            
-            print(closing.decode("utf-8"))
+                        print(process_lines(res).decode("utf-8"))
+                    
+                    print(closing.decode("utf-8"))
 
     for filename in query_filenames:
         os.remove(filename)
@@ -145,6 +155,6 @@ def process_lines(lines):
 
 
 def run_worker(command):
-    res = subprocess.run(command, check=True, shell=True, capture_output=True)
+    res = subprocess.run(command, shell=True, capture_output=True)
 
-    return res.stdout
+    return res.stdout, res.stderr, res.returncode
