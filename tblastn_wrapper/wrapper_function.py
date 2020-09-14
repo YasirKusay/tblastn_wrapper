@@ -78,7 +78,7 @@ def run_queries(query_filenames, output_filename, working_dir, threads, extra_ar
         query_results = pool.map(run_worker, query_commands)
 
         for res, error, returncode in query_results:
-            if error is not None:
+            if returncode != 0:
                 sys.stderr.write(error.decode("utf-8"))
                 pool.terminate()
                 exit(returncode)
@@ -87,26 +87,25 @@ def run_queries(query_filenames, output_filename, working_dir, threads, extra_ar
 
         closing = "" # stores the info, such as matrix used, gap penalties, etc
 
-        if is_error is False:
-            if output_filename is not None:
-                with open(output_filename, "wb") as f:
-                    for res in query_results:
-                        if (num_queries == 0):
-                            num_queries += 1
-                            to_print, closing = initial_line_process(res)
-                            f.write(to_print)
-                        else:
-                            f.write(process_lines(res))
-                    
-                    f.write(closing)
-            else:
-                for res in query_results:
+        if output_filename is not None:
+            with open(output_filename, "wb") as f:
+                for res, error, returncode in query_results:
                     if (num_queries == 0):
                         num_queries += 1
                         to_print, closing = initial_line_process(res)
-                        print(to_print.decode("utf-8"))
+                        f.write(to_print)
                     else:
-                        print(process_lines(res).decode("utf-8"))
+                        f.write(process_lines(res))
+                    
+                f.write(closing)
+        else:
+            for res in query_results:
+                if (num_queries == 0):
+                    num_queries += 1
+                    to_print, closing = initial_line_process(res)
+                    print(to_print.decode("utf-8"))
+                else:
+                    print(process_lines(res).decode("utf-8"))
                     
                     print(closing.decode("utf-8"))
 
