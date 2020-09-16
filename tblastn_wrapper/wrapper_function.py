@@ -99,7 +99,7 @@ def run_queries(query_filenames, output_filename, working_dir, threads, extra_ar
                     
                 f.write(closing)
         else:
-            for res in query_results:
+            for res, error, returncode in query_results:
                 if (num_queries == 0):
                     num_queries += 1
                     to_print, closing = initial_line_process(res)
