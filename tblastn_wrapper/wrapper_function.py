@@ -107,7 +107,7 @@ def run_queries(query_filenames, output_filename, working_dir, threads, extra_ar
                 else:
                     print(process_lines(res).decode("utf-8"))
                     
-                print(closing.decode("utf-8"))
+            print(closing.decode("utf-8"))
 
     for filename in query_filenames:
         os.remove(filename)

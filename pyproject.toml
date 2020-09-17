@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tblastn_wrapper"
-version = "0.1.14"
+version = "0.1.15"
 description = "A wrapper for tblastn that parallelises queries"
 authors = ["Yasir Kusay <yasir.kusay@student.unsw.edu.au>", "Cadel Watson <cadel@cadelwatson.com>"]
 
